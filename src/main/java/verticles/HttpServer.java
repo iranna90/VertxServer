@@ -9,16 +9,20 @@ import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.BodyHandler;
 
 public class HttpServer extends AbstractVerticle {
 
   @Override
   public void start(final Future<Void> startFuture) {
 
-    Router route = Router.router(vertx);
-    final io.vertx.reactivex.core.http.HttpServer server = vertx.createHttpServer();
-    route.put("/").consumes("application/json").handler(this::handle);
-    server.requestHandler(route::accept).rxListen(8888)
+    Router router = Router.router(vertx);
+    router.route().handler(BodyHandler.create());
+    router.post("/").consumes("application/json").handler(this::handle);
+
+    vertx.createHttpServer()
+        .requestHandler(router)
+        .rxListen(8888)
         .subscribe(
             any -> startFuture.complete(),
             error -> System.out.println("failed deployment " + error.getMessage())
@@ -32,7 +36,10 @@ public class HttpServer extends AbstractVerticle {
         .observeOn(RxHelper.scheduler(vertx.getDelegate()))
         .subscribe(
             body -> rc.response().end(body.encode()),
-            error -> rc.response().end(error.getMessage())
+            error -> {
+              error.printStackTrace();
+              rc.response().end(error.getMessage());
+            }
         );
   }
 
