@@ -32,7 +32,7 @@ public class HttpServer extends AbstractVerticle {
   private void handle(final RoutingContext rc) {
     Observable.just(rc)
         .map(RoutingContext::getBodyAsJson)
-        .delay(300, TimeUnit.MILLISECONDS)
+        .delay(50, TimeUnit.MILLISECONDS)
         .observeOn(RxHelper.scheduler(vertx.getDelegate()))
         .subscribe(
             body -> rc.response().end(body.encode()),
